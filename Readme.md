@@ -20,8 +20,7 @@ function wrappedKoaMiddleware(app) {
         takeTime: process.uptime() * 1000 - t1
       });
     };
-    this.middleware.push(wrapFun);
-    return this;
+    return appUse.call(this, wrapFun);
   };
 }
 ```
