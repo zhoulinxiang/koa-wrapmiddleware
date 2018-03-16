@@ -1,4 +1,3 @@
-
 ## Record the time spent on each middleware
 
 Use this data for performance optimization
@@ -25,4 +24,45 @@ function wrappedKoaMiddleware(app) {
     return this;
   };
 }
+```
+
+Here is an example
+
+```js
+const app = new Koa();
+
+wrappedKoaMiddleware(app);
+app.use(async () => {
+  await next();
+  console.log(ctx.middlewareTakeTime);
+  /**
+   * console
+  [ { num: 3, funcName: '', takeTime: 2 },
+  { num: 2, funcName: 'loggerFunc', takeTime: 4 },
+  { num: 1, funcName: 'xResponseTimeFunc', takeTime: 4 } ]
+  **/
+});
+const xResponseTimeFunc = async (ctx, next) => {
+  const start = Date.now();
+  await next();
+  const ms = Date.now() - start;
+  ctx.set("X-Response-Time", `${ms}ms`);
+};
+app.use(xResponseTimeFunc);
+
+// logger
+const loggerFunc = async (ctx, next) => {
+  const start = Date.now();
+  await next();
+  const ms = Date.now() - start;
+  console.log(`${ctx.method} ${ctx.url} - ${ms}`);
+};
+app.use(loggerFunc);
+
+// response
+app.use(async ctx => {
+  ctx.body = "Hello World";
+});
+
+app.listen(3000);
 ```
