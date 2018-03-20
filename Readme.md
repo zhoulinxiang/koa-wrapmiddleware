@@ -2,34 +2,11 @@
 
 Use this data for performance optimization
 
-```js
-function wrappedKoaMiddleware(app) {
-  const appUse = app.use;
-  app.use = function(fn) {
-    if (isGeneratorFunction(fn)) {
-      fn = convert(fn);
-    }
-    const middlewareLength = this.middleware.length;
-    const wrapFun = async function(ctx, next) {
-      const t1 = process.uptime() * 1000;
-      await fn(ctx, next);
-      ctx.middlewareTakeTime = ctx.middlewareTakeTime || [];
-      ctx.middlewareTakeTime.push({
-        num: middlewareLength,
-        funcName: fn.name,
-        takeTime: process.uptime() * 1000 - t1
-      });
-    };
-    return appUse.call(this, wrapFun);
-  };
-}
-```
-
-Here is an example
+Here is an example:
 
 ```js
 const app = new Koa();
-
+const wrappedKoaMiddleware = require("koa-wrapmiddleware");
 wrappedKoaMiddleware(app);
 app.use(async () => {
   await next();
@@ -65,3 +42,29 @@ app.use(async ctx => {
 
 app.listen(3000);
 ```
+
+Implement：
+
+```js
+function wrappedKoaMiddleware(app) {
+  const appUse = app.use;
+  app.use = function(fn) {
+    if (isGeneratorFunction(fn)) {
+      fn = convert(fn);
+    }
+    const middlewareLength = this.middleware.length;
+    const wrapFun = async function(ctx, next) {
+      const t1 = process.uptime() * 1000;
+      await fn(ctx, next);
+      ctx.middlewareTakeTime = ctx.middlewareTakeTime || [];
+      ctx.middlewareTakeTime.push({
+        num: middlewareLength,
+        funcName: fn.name,
+        takeTime: process.uptime() * 1000 - t1
+      });
+    };
+    return appUse.call(this, wrapFun);
+  };
+}
+```
+
